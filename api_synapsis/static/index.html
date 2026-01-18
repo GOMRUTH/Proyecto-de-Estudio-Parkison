@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>SYNAPSIS – Análisis Acústico</title>
+
+  <!-- Bootstrap -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+
+  <!-- CSS propio -->
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+
+  <div class="card shadow-lg">
+    <div class="card-body">
+
+      <h2 class="text-center mb-4">
+        Análisis Acústico – SYNAPSIS
+      </h2>
+
+      <!-- FORMULARIO -->
+      <form id="formAudio">
+        <div class="mb-3">
+          <label class="form-label">Nombre del paciente</label>
+          <input type="text" class="form-control" id="paciente" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Archivo de audio (.wav)</label>
+          <input type="file" class="form-control" id="audio" accept=".wav" required>
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-lg">
+            Analizar audio
+          </button>
+        </div>
+      </form>
+
+      <!-- RESULTADOS -->
+      <div id="resultado" class="mt-5 d-none">
+
+        <h4 class="mb-3"> Resultados numéricos</h4>
+
+        <table class="table table-bordered text-center">
+          <thead class="table-dark">
+            <tr>
+              <th>F0 Media</th>
+              <th>F0 Min</th>
+              <th>F0 Max</th>
+              <th>Jitter</th>
+              <th>Shimmer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="tablaValores"></tr>
+          </tbody>
+        </table>
+
+        <h4 class="mt-4 mb-3"> Gráficos</h4>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <img id="pitchImg" class="img-fluid rounded shadow">
+          </div>
+          <div class="col-md-6 mb-3">
+            <img id="specImg" class="img-fluid rounded shadow">
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.getElementById("formAudio").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const paciente = document.getElementById("paciente").value;
+  const audio = document.getElementById("audio").files[0];
+
+  const formData = new FormData();
+  formData.append("paciente", paciente);
+  formData.append("file", audio);
+
+  const response = await fetch("/analyze_audio", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json();
+
+  document.getElementById("resultado").classList.remove("d-none");
+
+  document.getElementById("tablaValores").innerHTML = `
+    <td>${data.F0_mean.toFixed(2)}</td>
+    <td>${data.F0_min.toFixed(2)}</td>
+    <td>${data.F0_max.toFixed(2)}</td>
+    <td>${data.jitter.toFixed(5)}</td>
+    <td>${data.shimmer.toFixed(5)}</td>
+  `;
+
+  const pacienteURL = paciente.replace(" ", "_");
+
+  document.getElementById("pitchImg").src =
+    `/uploads/pacientes/${pacienteURL}/pitch.png?t=${Date.now()}`;
+
+  document.getElementById("specImg").src =
+    `/uploads/pacientes/${pacienteURL}/spectrogram.png?t=${Date.now()}`;
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+body {
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+h2 {
+  font-weight: 600;
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+img {
+  background: white;
+  padding: 8px;
+}
