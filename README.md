@@ -184,27 +184,19 @@ cv_pitch = pitch_std / f0_mean
 
 Calcula propiedades estadísticas del pitch.
 
-### F0 Mean
+### F0 Mean (Promedio del pitch).
 
-Promedio del pitch.
+### Pitch Std (Variabilidad del pitch).
 
-### Pitch Std
+### Pitch Range (Diferencia entre el pitch máximo y mínimo).
 
-Variabilidad del pitch.
-
-### Pitch Range
-
-Diferencia entre el pitch máximo y mínimo.
-
-### CV Pitch
-
-Coeficiente de variación:
+### CV Pitch (Coeficiente de variación):
 
 ```
 CV = desviación estándar / media
 ```
 
-Se utiliza para medir **inestabilidad vocal**.
+Se utiliza para medir **inestabilidad vocal**. (Hablando de la relacion de Estadistica con el uso de la frecuencia media)
 
 ---
 
@@ -333,7 +325,7 @@ Clasificación:
 | 2 | Moderado |
 | 3 | Severo |
 
-⚠️ Este sistema **no constituye diagnóstico clínico**, solo un indicador.
+Aclaracion: Es solo un indicador.
 
 ---
 
