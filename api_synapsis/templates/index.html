@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Análisis Acústico</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body class="container py-5">
+
+<div class="card shadow p-4">
+    <h2 class="text-center mb-4"> Synapsis</h2>
+
+    <form id="audioForm">
+
+        <div class="mb-3">
+            <label class="form-label">Nombre del Paciente</label>
+            <input type="text" id="paciente" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Sexo</label>
+            <select id="sexo" class="form-control" required>
+                <option value="">Seleccione</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Seleccionar Audio (.wav recomendado)</label>
+            <input type="file" id="audioFile" class="form-control" accept=".wav" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            Analizar Audio
+        </button>
+    </form>
+</div>
+
+<div id="resultado"></div>
+
+<script>
+document.getElementById("audioForm").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const paciente = document.getElementById("paciente").value.trim();
+    const sexo = document.getElementById("sexo").value;
+    const file = document.getElementById("audioFile").files[0];
+
+    if (!paciente || !sexo || !file) {
+        alert("Complete todos los campos.");
+        return;
+    }
+
+    const pacienteURL = paciente.replaceAll(" ", "_");
+
+    const formData = new FormData();
+    formData.append("paciente", paciente);
+    formData.append("sexo", sexo);
+    formData.append("audio", file);
+
+    try {
+        const response = await fetch("/analyze_audio", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) throw new Error("Error servidor");
+
+        const data = await response.json();
+
+        let claseScore = "";
+
+        if (data.Clasificacion === "Normal") claseScore = "score-normal";
+        else if (data.Clasificacion === "Leve") claseScore = "score-leve";
+        else if (data.Clasificacion === "Moderado") claseScore = "score-moderado";
+        else claseScore = "score-severo";
+
+        document.getElementById("resultado").innerHTML = `
+        <div class="card shadow p-4 mt-4">
+
+            <h4 class="mb-3">Resultados Acústicos</h4>
+
+            <table class="table table-bordered">
+                <tr><th>F0 Media</th><td>${data.F0_mean} Hz</td></tr>
+                <tr><th>Estado F0</th>
+                    <td>${data.F0_estado} (Esperado: ${data.F0_rango_min}-${data.F0_rango_max} Hz)</td>
+                </tr>
+                <tr><th>Desv. Pitch</th><td>${data.Pitch_std}</td></tr>
+                <tr><th>Rango Pitch</th><td>${data.Pitch_range}</td></tr>
+                <tr><th>CV Pitch</th><td>${data.CV_pitch}</td></tr>
+                <tr><th>Intensidad</th><td>${data.Intensidad} dB</td></tr>
+                <tr><th>Jitter</th><td>${data.Jitter}</td></tr>
+                <tr><th>Shimmer</th><td>${data.Shimmer}</td></tr>
+                <tr><th>HNR</th><td>${data.HNR} dB</td></tr>
+            </table>
+
+            <h4 class="text-center mt-3 ${claseScore}">
+                Score: ${data.Score} — ${data.Clasificacion}
+            </h4>
+
+            <h5 class="mt-4"> Gráficos</h5>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <img class="img-fluid shadow"
+                    src="/uploads/pacientes/${pacienteURL}/pitch.png?t=${Date.now()}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <img class="img-fluid shadow"
+                    src="/uploads/pacientes/${pacienteURL}/spectrogram.png?t=${Date.now()}">
+                </div>
+            </div>
+
+            <div id="historial"></div>
+
+        </div>
+        `;
+
+        // Cargar historial
+        const historialResponse = await fetch(`/historial/${pacienteURL}`);
+        const historial = await historialResponse.json();
+
+        let historialHTML = "<h5 class='mt-4'> Historial</h5>";
+
+        historial.forEach(item => {
+            historialHTML += `
+                <div class="historial-item">
+                    ${item.fecha} — Score: ${item.Score}
+                </div>
+            `;
+        });
+
+        document.getElementById("historial").innerHTML = historialHTML;
+
+    } catch (error) {
+        alert("Ocurrió un error al analizar.");
+        console.error(error);
+    }
+});
+</script>
+
+</body>
+</html>
